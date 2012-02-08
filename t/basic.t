@@ -2,34 +2,31 @@ use strict;
 use warnings;
 
 use Test::More 0.88;
-
 use List::MoreUtils 'uniq';
-use HTML::Tiny;
 use HTML::Perlish ':all';
-use Template::Declare::TagSet::HTML ();
-use Try::Tiny;
 
-my $h = HTML::Tiny->new;
+my @tags = HTML::Perlish::our_tags();
+my %SKIPS = map { $_ => 1 } (); #qw{ applet area article };
 
-subtest 'tags check against HTML::Tiny output' => sub {
+for my $tag (@tags) {
 
-    # not in HTML::Tiny -- not investigated yet (utoh -- no html5 elements?)
-    my %SKIPS = map { $_ => 1 } qw{ applet area article };
+    subtest "checking: $tag" => sub {
 
-    my @tags = uniq sort
-        grep { ! $SKIPS{$_} }
-        @{Template::Declare::TagSet::HTML::get_tag_list()}
-        ;
-
-    for my $tag (@tags) {
+        plan skip_all => "$tag needs work" if $SKIPS{$tag};
 
         can_ok('HTML::Perlish', $tag);
 
-        is eval("$tag {}"),                             try { $h->$tag() }, "simple $tag works";
-        is eval("$tag { one gets 'two' }"),             try { $h->$tag({ one => 'two'}) }, "$tag w/attribute";
-        is eval("$tag { 'content!' }"),                 try { $h->$tag('content!') }, "$tag w/content";
-        is eval("$tag { one gets 'two'; 'content!' }"), try { $h->$tag({ one => 'two'}, 'content!') }, "$tag w/attribute and content";
-
+        is eval("$tag {}"),
+            qq{<$tag></$tag>}, "simple $tag works";
+        is eval("$tag { one gets 'two' }"),
+            qq{<$tag one="two"></$tag>}, "$tag w/attribute";
+        is eval("$tag { 'content!' }"),
+            qq{<$tag>content!</$tag>}, "$tag w/content";
+        is eval("$tag { one gets 'two'; 'content!' }"),
+            qq{<$tag one="two">content!</$tag>}, "$tag w/attribute and content";
+        #is eval("$tag { attributes one => 'two', three => 4 }"),
+        #    qq{<$tag one="two"></$tag>}, "$tag w/more attributes!";
+        #note $@;
     }
 
 };
