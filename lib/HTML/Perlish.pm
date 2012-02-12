@@ -8,6 +8,7 @@ use strict;
 use warnings;
 
 use Template::Declare::TagSet::HTML;
+use Capture::Tiny 0.15 'capture_stdout';
 use CGI ();
 use HTML::Tiny;
 use Sub::Install;
@@ -66,7 +67,6 @@ BEGIN {
         my ($tag, $inner_coderef) = @_;
 
         ### @_
-
         my %attrs = ();
 
         # This is almost completely stolen from Template::Declare::Tags, and
@@ -74,9 +74,11 @@ BEGIN {
         # it was achieved over there.
         no warnings 'once', 'redefine';
         local *gets::AUTOLOAD = _is_autoload_gen(\%attrs);
-        my $inner = $inner_coderef->();
+        my $inner = q{};
+        my $stdout = capture_stdout { $inner .= $inner_coderef->() || q{} };
 
-        return $h->tag($tag, \%attrs, $inner);
+        ### $stdout
+        return $h->tag($tag, \%attrs, "$stdout$inner");
     }
 
     @tags = our_tags();

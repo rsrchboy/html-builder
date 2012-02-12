@@ -1,6 +1,8 @@
 use strict;
 use warnings;
 
+use v5.10;
+
 use Test::More 0.88;
 use List::MoreUtils 'uniq';
 use HTML::Perlish ':all';
@@ -37,6 +39,15 @@ subtest "check script, as it's picky" => sub {
         script { bip gets 'baz' },
         '<script bip="baz"></script>',
         'script() checks out',
+        ;
+};
+
+subtest 'check STDOUT capture' => sub {
+
+    is
+        p { say img { 'hi there' }; 'something else' },
+        "<p><img>hi there</img>\nsomething else</p>",
+        'outs worked correctly',
         ;
 };
 
