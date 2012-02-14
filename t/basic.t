@@ -5,9 +5,9 @@ use v5.10;
 
 use Test::More 0.88;
 use List::MoreUtils 'uniq';
-use HTML::Perlish ':all';
+use HTML::Builder ':all';
 
-my @tags = HTML::Perlish::our_tags();
+my @tags = HTML::Builder::our_tags();
 my %SKIPS = map { $_ => 1 } (); #qw{ applet area article };
 
 for my $tag (@tags) {
@@ -16,7 +16,7 @@ for my $tag (@tags) {
 
         plan skip_all => "$tag needs work" if $SKIPS{$tag};
 
-        can_ok('HTML::Perlish', $tag);
+        can_ok('HTML::Builder', $tag);
 
         is eval("$tag {}"),
             qq{<$tag></$tag>}, "simple $tag works";

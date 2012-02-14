@@ -1,4 +1,4 @@
-package HTML::Perlish;
+package HTML::Builder;
 
 # ABSTRACT: A declarative approach to HTML generation
 
@@ -118,7 +118,7 @@ __END__
 
 =head1 SYNOPSIS
 
-    use HTML::Perlish ':minimal';
+    use HTML::Builder ':minimal';
 
     # $html is: <div id="main"><p>Something, huh?</p></div>
     my $html = div { id gets 'main'; p { 'Something, huh?' } };
