@@ -7,7 +7,6 @@ use v5.10;
 use strict;
 use warnings;
 
-use Template::Declare::TagSet::HTML;
 use Capture::Tiny 0.15 'capture_stdout';
 use CGI ();
 use HTML::Tiny;
@@ -186,7 +185,8 @@ C<meta>).
 
 This package was inspired by L<Template::Declare::Tags>... In particular, our
 C<gets::AUTOLOAD> is pretty much a straight-up copy of Template::Declare::Tags'
-C<is::AUTOLOAD>, with some modifications. Thanks! :)
+C<is::AUTOLOAD>, with some modifications.  We also pass off to L<HTML::Tiny>,
+and allow it to do the work of actually generating the output.  Thanks! :)
 
 =head1 SEE ALSO
 
