@@ -21,7 +21,13 @@ my @tags;
 
 =func our_tags
 
-A unique, sorted list of the html tags we know about (and handle).
+A unique, sorted list of the HTML tags we know about (and handle).
+
+=func tag($tag_name, $code_ref)
+
+The actual function responsible for handling the tagging.  All of the helper
+functions pass off to tag() (e.g. C<div()> is C<sub div(&) { unshift 'div';
+goto \&tag }>).
 
 =cut
 
@@ -86,7 +92,6 @@ BEGIN {
     for my $tag (@tags) {
 
         Sub::Install::install_sub({
-            #code => sub(&) { my $sub = shift; tag($tag, $sub) },
             code => sub(&) { unshift @_, $tag; goto \&tag },
             as   => $tag,
         });
@@ -102,7 +107,7 @@ use Sub::Exporter -setup => {
         moose_safe => [ grep { ! /^(meta|with)/ } @tags ],
 
         minimal => [ 'h1'..'h5', qw{
-            div p img script
+            div p img script br ul ol li style a
         } ],
     },
 };
@@ -125,12 +130,31 @@ HTML a little less tedious.
 
 =head1 USAGE
 
-Each supported HTML tag
+Each supported HTML tag takes a coderef, executes it, and returns the output
+the coderef writes to STDOUT with the return value appended.
+
+That is:
+
+    div { say h1 { 'Hi there! }; p { "Nice day, isn't it?" } }
+
+Generates:
+
+    <div><h1>Hi there!</h1><p>Nice day, isn't it?</p></div>
+
+Element attributes are handled by specifying them with C<gets>.  e.g.:
+
+    div { id gets 'main'; 'Hi!' }
+
+Generates:
+
+    <div id="main">Hi!</div>
+
+L<gets> may be specified multiple times, for multiple attributes.
 
 =head1 EXPORTED FUNCTIONS
 
 Each tag we handle is capable of being exported, and called with a coderef.
-This coderef is excuted, and the return is wrapped in the tag.  Attributes on
+This coderef is executed, and the return is wrapped in the tag.  Attributes on
 the tag can be set from within the coderef by using L<gets>, a la C<id gets
 'foo'>.
 
@@ -138,26 +162,37 @@ the tag can be set from within the coderef by using L<gets>, a la C<id gets
 
 =head3 all
 
-Everything.  (Well, for a given definiton of everything, at least.)
+Everything.
+
+Well, what C<@CGI::EXPORT_TAGS{qw{ :html2 :html3 :html4 }}> thinks is
+everything, at any rate.
+
+This isn't, perhaps, optimal, but I haven't run into any issues with it yet.
+That being said, I'm open to changing our tags list, and where it's generated
+from.
 
 =head3 minimal
 
-A basic set of the most commonly used tags: C<h1>..C<h4>, C<div>, C<p>,
-C<img>, C<script>
+A basic set of the most commonly used tags:
+
+    h1..h4 div p img script br ul ol li style a
 
 =head3 moose_safe
 
 Everything, except tags that would conflict with L<Moose> sugar (currently
 C<meta>).
 
-=head1 ACKNOWLEDGEMENTS
+=head1 ACKNOWLEDGMENTS
 
-This package was inspired by L<Template::Declare::Tags>...  Thanks! :)
+This package was inspired by L<Template::Declare::Tags>... In particular, our
+C<gets::AUTOLOAD> is pretty much a straight-up copy of Template::Declare::Tags'
+C<is::AUTOLOAD>, with some modifications. Thanks! :)
 
 =head1 SEE ALSO
 
+L<CGI> (in particular, C<%CGI::EXPORT_TAGS>)
 L<HTML::Tiny>
-L<Template::Declare::Tags>.
+L<Template::Declare::Tags>
 
 =cut
 
