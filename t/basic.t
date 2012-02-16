@@ -45,9 +45,15 @@ subtest "check script, as it's picky" => sub {
 subtest 'check STDOUT capture' => sub {
 
     is
-        p { say img { 'hi there' }; 'something else' },
-        "<p><img>hi there</img>\nsomething else</p>",
-        'outs worked correctly',
+        p { print img { 'hi there' }; 'something else' },
+        "<p><img>hi there</img>something else</p>",
+        'STDOUT capture worked correctly',
+        ;
+
+    is
+        p { img { 'hi there' }; 'something else' },
+        "<p><img>hi there</img>something else</p>",
+        'inner STDOUT capture and print worked correctly',
         ;
 };
 
