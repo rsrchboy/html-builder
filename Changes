@@ -2,5 +2,10 @@ Revision history for HTML-Builder
 
 {{$NEXT}}
 
+0.002     2012-02-16 10:37:46 America/Los_Angeles
+- add span to :minimal
+- nested tags now write to STDOUT rather than return; this helps obviate the
+need for say() or print() all over the place
+
 0.001     2012-02-14 11:21:16 America/Los_Angeles
 - initial release
