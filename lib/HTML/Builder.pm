@@ -35,6 +35,20 @@ goto \&tag }>).
 # http://en.wikipedia.org/wiki/HTML5#Differences_from_HTML.C2.A04.01_and_XHTML.C2.A01.x
 # 18 Feb 2012
 
+=func html5_tags()
+
+The list of tags we think are HTML5.
+
+=func html_tags()
+
+The list of tags we think are HTML ( < HTML5, that is).
+
+=func our_tags()
+
+The unique, sorted list of all tags returned by html5_tags() and html_tags().
+
+=cut
+
 sub html5_tags { qw{
 
     article aside audio bdo canvas command datalist details embed figcaption
@@ -43,7 +57,7 @@ sub html5_tags { qw{
 
 } }
 
-sub tags_from_CGI {
+sub html_tags {
     return
         map { @{$_} }
         map { $CGI::EXPORT_TAGS{$_} // [] }
@@ -52,7 +66,7 @@ sub tags_from_CGI {
 }
 
 sub our_tags {
-    state $tags = [ uniq sort (html5_tags(), tags_from_CGI()) ];
+    state $tags = [ uniq sort (html5_tags(), html_tags()) ];
 
     return @$tags;
 }
