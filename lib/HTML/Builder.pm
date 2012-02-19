@@ -8,7 +8,6 @@ use strict;
 use warnings;
 
 use Capture::Tiny 0.15 'capture_stdout';
-use CGI ();
 use HTML::Tiny;
 use Sub::Install;
 use List::MoreUtils 'uniq';
@@ -32,8 +31,13 @@ goto \&tag }>).
 
 =cut
 
+# HTML5 tags from:
 # http://en.wikipedia.org/wiki/HTML5#Differences_from_HTML.C2.A04.01_and_XHTML.C2.A01.x
 # 18 Feb 2012
+#
+# Other HTML tags from:
+# http://www.w3schools.com/tags/default.asp
+# 19 Feb 2012
 
 =func html5_tags()
 
@@ -43,11 +47,17 @@ The list of tags we think are HTML5.
 
 The list of tags we think are HTML ( < HTML5, that is).
 
+=func depreciated_tags()
+
+HTML elements considered to be depreciated.
+
 =func our_tags()
 
 The unique, sorted list of all tags returned by html5_tags() and html_tags().
 
 =cut
+
+# !--...--	Defines
 
 sub html5_tags { qw{
 
@@ -57,7 +67,34 @@ sub html5_tags { qw{
 
 } }
 
+# excl: s
+sub depreciated_tags { qw{ applet basefont center dir font menu u xmp } }
+
+#!DOCTYPE
 sub html_tags {
+
+    # excl: sub map q tr
+
+    return qw{
+
+        a        abbr       acronym    address      area       b
+        base     bdo        big        blockquote   body       br
+        button   caption    cite       code         col        colgroup
+        dd       del        dfn        div          dl         dt
+        em       fieldset   form       frame        frameset   h1
+        head     hr         html       i            iframe     img
+        input    ins        kbd        label        legend     li
+        link                meta       noframes     noscript   object
+        ol       optgroup   option     p            param      pre
+                 samp       script     select       small      span
+        strike   strong     style                   sup        table
+        tbody    td         textarea   tfoot        th         thead
+        title               tt         ul           var
+
+    };
+}
+
+sub html_tags_XXX {
     return
         map { @{$_} }
         map { $CGI::EXPORT_TAGS{$_} // [] }
@@ -66,7 +103,7 @@ sub html_tags {
 }
 
 sub our_tags {
-    state $tags = [ uniq sort (html5_tags(), html_tags()) ];
+    state $tags = [ uniq sort (html5_tags(), html_tags(), depreciated_tags()) ];
 
     return @$tags;
 }
@@ -126,7 +163,7 @@ BEGIN {
 
     @tags = our_tags();
 
-    for my $tag (@tags) {
+    for my $tag (our_tags()) { # @tags) {
 
         Sub::Install::install_sub({
             code => sub(&) { unshift @_, $tag; goto \&tag },
@@ -137,17 +174,20 @@ BEGIN {
 
 use Sub::Exporter -setup => {
 
-    exports => [ @tags ],
+    #exports => [ @tags ],
+    exports => [ our_tags ],
     groups  => {
 
         default    => ':moose_safe',
-        moose_safe => [ grep { ! /^(meta|with)/ } @tags ],
+        moose_safe => [ grep { ! /^(meta|with)/ } our_tags ],
 
         minimal => [ 'h1'..'h5', qw{
             div span p img script br ul ol li style a
         } ],
 
-        html5 => [ html5_tags() ],
+        depreciated => [ depreciated_tags() ],
+        html        => [ html_tags()        ],
+        html5       => [ html5_tags()       ],
     },
 };
 
@@ -253,4 +293,3 @@ L<HTML::Tiny>
 L<Template::Declare::Tags>
 
 =cut
-

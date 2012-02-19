@@ -1,6 +1,7 @@
 Revision history for HTML-Builder
 
 {{$NEXT}}
+- add first attempt at HTML5 tag support
 
 0.003     2012-02-18 11:56:13 America/Los_Angeles
 
