@@ -15,8 +15,6 @@ use List::MoreUtils 'uniq';
 # debugging...
 #use Smart::Comments;
 
-my @tags;
-
 our $IN_TAG;
 
 =func our_tags
@@ -68,9 +66,15 @@ sub html5_tags { qw{
 } }
 
 # excl: s
-sub depreciated_tags { qw{ applet basefont center dir font menu u xmp } }
+sub depreciated_tags { qw{ applet basefont center dir font menu strike u xmp } }
 
-#!DOCTYPE
+sub conflicting_tags { {
+    html_sub => 'sub',
+    html_map => 'map',
+    html_q   => 'q',
+    html_tr  => 'tr',
+} }
+
 sub html_tags {
 
     # excl: sub map q tr
@@ -87,109 +91,116 @@ sub html_tags {
         link                meta       noframes     noscript   object
         ol       optgroup   option     p            param      pre
                  samp       script     select       small      span
-        strike   strong     style                   sup        table
+                 strong     style                   sup        table
         tbody    td         textarea   tfoot        th         thead
         title               tt         ul           var
 
     };
 }
 
-sub html_tags_XXX {
-    return
-        map { @{$_} }
-        map { $CGI::EXPORT_TAGS{$_} // [] }
-        qw{ :html2 :html3 :html4 }
-        ;
+sub minimal_tags {
+    return ('h1'..'h5', qw{
+        div span p img script br ul ol li style a
+    });
 }
 
 sub our_tags {
-    state $tags = [ uniq sort (html5_tags(), html_tags(), depreciated_tags()) ];
-
-    return @$tags;
+    my @tags = (
+        html5_tags(),
+        html_tags(),
+        depreciated_tags(),
+        (keys %{ conflicting_tags() }),
+    );
+    return uniq sort @tags;
 }
 
-BEGIN {
+sub _is_autoload_gen {
+    my ($attr_href) = @_;
 
-    sub _is_autoload_gen {
-        my ($attr_href) = @_;
+    return sub {
+        shift;
 
-        return sub {
-            shift;
+        my $field = our $AUTOLOAD;
+        $field =~ s/.*:://;
 
-            my $field = our $AUTOLOAD;
-            $field =~ s/.*:://;
+        # XXX
+        $field =~ s/__/:/g;   # xml__lang  is 'foo' ====> xml:lang="foo"
+        $field =~ s/_/-/g;    # http_equiv is 'bar' ====> http-equiv="bar"
 
-            # XXX
-            $field =~ s/__/:/g;   # xml__lang  is 'foo' ====> xml:lang="foo"
-            $field =~ s/_/-/g;    # http_equiv is 'bar' ====> http-equiv="bar"
+        # Squash empty values, but not '0' values
+        my $val = join ' ', grep { defined $_ && $_ ne '' } @_;
 
-            # Squash empty values, but not '0' values
-            my $val = join ' ', grep { defined $_ && $_ ne '' } @_;
+        #push @$attr_aref, $field => $val;
+        $attr_href->{$field} = $val;
 
-            #push @$attr_aref, $field => $val;
-            $attr_href->{$field} = $val;
+        return;
+    };
+}
 
-            return;
-        };
+sub tag($&) {
+    my ($tag, $inner_coderef) = @_;
+
+    state $h = HTML::Tiny->new;
+
+    ### @_
+    my %attrs = ();
+
+    # This is almost completely stolen from Template::Declare::Tags, and
+    # completely terrifying in that it confirms my dark suspicions on how
+    # it was achieved over there.
+    no warnings 'once', 'redefine';
+    local *gets::AUTOLOAD = _is_autoload_gen(\%attrs);
+    my $inner = q{};
+    my $stdout = capture_stdout { local $IN_TAG = 1; $inner .= $inner_coderef->() || q{} };
+
+    my $return = $h->tag($tag, \%attrs, "$stdout$inner");
+
+    ### $return
+    if ($IN_TAG) {
+        print $return;
+        return q{};
     }
-
-    my $h = HTML::Tiny->new;
-
-    sub tag($&) {
-        my ($tag, $inner_coderef) = @_;
-
-        ### @_
-        my %attrs = ();
-
-        # This is almost completely stolen from Template::Declare::Tags, and
-        # completely terrifying in that it confirms my dark suspicions on how
-        # it was achieved over there.
-        no warnings 'once', 'redefine';
-        local *gets::AUTOLOAD = _is_autoload_gen(\%attrs);
-        my $inner = q{};
-        my $stdout = capture_stdout { local $IN_TAG = 1; $inner .= $inner_coderef->() || q{} };
-
-        my $return = $h->tag($tag, \%attrs, "$stdout$inner");
-
-        ### $return
-        if ($IN_TAG) {
-            print $return;
-            return q{};
-        }
-        else {
-            return $return;
-        }
-    }
-
-    @tags = our_tags();
-
-    for my $tag (our_tags()) { # @tags) {
-
-        Sub::Install::install_sub({
-            code => sub(&) { unshift @_, $tag; goto \&tag },
-            as   => $tag,
-        });
+    else {
+        return $return;
     }
 }
 
 use Sub::Exporter -setup => {
 
-    #exports => [ @tags ],
     exports => [ our_tags ],
     groups  => {
 
         default    => ':moose_safe',
         moose_safe => [ grep { ! /^(meta|with)/ } our_tags ],
 
-        minimal => [ 'h1'..'h5', qw{
-            div span p img script br ul ol li style a
-        } ],
-
-        depreciated => [ depreciated_tags() ],
-        html        => [ html_tags()        ],
-        html5       => [ html5_tags()       ],
+        minimal     => sub { _generate_group([     minimal_tags ], @_) },
+        html        => sub { _generate_group([        html_tags ], @_) },
+        html5       => sub { _generate_group([       html5_tags ], @_) },
+        depreciated => sub { _generate_group([ depreciated_tags ], @_) },
     },
 };
+
+sub _generate_group {
+    my ($tags, $class, $group, $arg) = @_;
+
+    return {
+        map { my $tag = $_; $tag => sub(&) { unshift @_, $tag; goto \&tag } }
+        @$tags
+    };
+}
+
+my $_install = sub {
+    my ($subname, $tag) = @_;
+    $tag ||= $subname;
+    Sub::Install::install_sub({
+        code => sub(&) { unshift @_, $tag; goto \&tag },
+        as   => $tag,
+    });
+};
+
+my $conflict = conflicting_tags;
+$_install->($_) for our_tags;
+$_install->(@$_) for map { [ $_ => $conflict->{$_} ] } keys %$conflict;
 
 !!42;
 
@@ -242,6 +253,15 @@ its output to STDOUT rather than returning it.  That means that this:
     div { h1 { 'Hi there! }; p { "Nice day, isn't it?" } }
 
 Behave identically, from the perspective of the caller.
+
+=head1 RENAMING EXPORTED FUNCTIONS
+
+This package uses L<Sub::Exporter>, so you can take advantage of the features
+that package provides.  For example, if you wanted to import the tags in the
+'minimal' group, but wanted to prefix each function with 'html_', you could
+do:
+
+    use HTML::Builder -minimal => { -prefix => 'html_' };
 
 =head1 EXPORTED FUNCTIONS
 
