@@ -1,9 +1,18 @@
 Revision history for HTML-Builder
 
 {{$NEXT}}
-- add first attempt at HTML5 tag support
+
+0.004     2012-02-20 20:48:01 America/Los_Angeles
+- drop :html, :moose_safe groups
+- add :table group
+- default export list is now :minimal
+- document (well, give a clue at least) how to rename imports en masse
+- rejigger group generation as to take advantage of Sub::Exporter
+- drop dep on CGI for tag list (use a (hopefully) reasonable static one
+instead)
 
 0.003     2012-02-18 11:56:13 America/Los_Angeles
+- add first attempt at HTML5 tag support
 
 0.002     2012-02-16 10:37:46 America/Los_Angeles
 - add span to :minimal
