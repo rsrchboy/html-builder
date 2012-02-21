@@ -68,6 +68,13 @@ sub html5_tags { qw{
 # excl: s
 sub depreciated_tags { qw{ applet basefont center dir font menu strike u xmp } }
 
+=func conflicting_tags
+
+Returns a HashRef of tags that conflict with Perl builtins: our named exports
+for the tags are the keys; the tags themselves are the values.
+
+=cut
+
 sub conflicting_tags { {
     html_sub => 'sub',
     html_map => 'map',
@@ -98,11 +105,32 @@ sub html_tags {
     };
 }
 
+=func table_tags
+
+A list of tags related to tables, that will belong to the C<:table> group.
+
+=cut
+
+sub table_tags { qw{ tr td th thead tbody tfoot } }
+
+=func minimal_tags
+
+A list of tags we consider a "minimal" set.  These will belong to the
+C<:minimal> group.
+
+=cut
+
 sub minimal_tags {
     return ('h1'..'h5', qw{
         div span p img script br ul ol li style a
     });
 }
+
+=func our_tags
+
+The set of all the tags we know of.
+
+=cut
 
 sub our_tags {
     my @tags = (
@@ -170,13 +198,12 @@ use Sub::Exporter -setup => {
     exports => [ our_tags ],
     groups  => {
 
-        default    => ':moose_safe',
-        moose_safe => [ grep { ! /^(meta|with)/ } our_tags ],
+        default    => ':minimal',
 
         minimal     => sub { _generate_group([     minimal_tags ], @_) },
-        html        => sub { _generate_group([        html_tags ], @_) },
         html5       => sub { _generate_group([       html5_tags ], @_) },
         depreciated => sub { _generate_group([ depreciated_tags ], @_) },
+        table       => sub { _generate_group([       table_tags ], @_) },
     },
 };
 
@@ -189,18 +216,20 @@ sub _generate_group {
     };
 }
 
-my $_install = sub {
-    my ($subname, $tag) = @_;
-    $tag ||= $subname;
-    Sub::Install::install_sub({
-        code => sub(&) { unshift @_, $tag; goto \&tag },
-        as   => $tag,
-    });
-};
+{
+    my $_install = sub {
+        my ($subname, $tag) = @_;
+        $tag ||= $subname;
+        Sub::Install::install_sub({
+            code => sub(&) { unshift @_, $tag; goto \&tag },
+            as   => $tag,
+        });
+    };
 
-my $conflict = conflicting_tags;
-$_install->($_) for our_tags;
-$_install->(@$_) for map { [ $_ => $conflict->{$_} ] } keys %$conflict;
+    my $conflict = conflicting_tags;
+    $_install->($_)  for our_tags;
+    $_install->(@$_) for map { [ $_ => $conflict->{$_} ] } keys %$conflict;
+}
 
 !!42;
 
@@ -270,18 +299,20 @@ This coderef is executed, and the return is wrapped in the tag.  Attributes on
 the tag can be set from within the coderef by using L<gets>, a la C<id gets
 'foo'>.
 
+By default we export the C<:minimal> group.
+
 =head2 Export Groups
 
 =head3 :all
 
-Everything.
+Everything not conflicting with Perl builtins.
 
-Well, what C<@CGI::EXPORT_TAGS{qw{ :html2 :html3 :html4 }}> thinks is
-everything, at any rate.
+This isn't an optimal group to use as-is -- it will cause a ton of functions
+to be imported, including some that will conflict with several Perl builtins.
+If you use this group, you are highly encouraged to supply a prefix for it,
+like:
 
-This isn't, perhaps, optimal, but I haven't run into any issues with it yet.
-That being said, I'm open to changing our tags list, and where it's generated
-from.
+    use HTML::Builder -all => { -prefix => 'html_' };
 
 =head3 :minimal
 
@@ -294,10 +325,14 @@ A basic set of the most commonly used tags:
 HTML5 tags (C<article>, C<header>, C<nav>, etc) -- or at least what Wikipedia
 thinks are HTML5 tags.
 
-=head3 :moose_safe
+=head3 :table
 
-Everything, except tags that would conflict with L<Moose> sugar (currently
-C<meta>).
+The table tags:
+
+    table thead tbody tfoot tr th td
+
+As C<tr> would conflict with a Perl builtin, it is recommended that this group
+be imported with a prefix ('table_' would seem to suggest itself).
 
 =head1 ACKNOWLEDGMENTS
 
@@ -308,8 +343,8 @@ and allow it to do the work of actually generating the output.  Thanks! :)
 
 =head1 SEE ALSO
 
-L<CGI> (in particular, C<%CGI::EXPORT_TAGS>)
 L<HTML::Tiny>
 L<Template::Declare::Tags>
+L<HTML::HTML5::Builder>
 
 =cut
