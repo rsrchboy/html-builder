@@ -154,6 +154,30 @@ sub our_tags {
     return uniq sort @tags;
 }
 
+=func attr(&)
+
+An alternative to using C<gets> (or instances where it won't work, e.g. C<for
+gets 'name'>).  Takes a coderef, expects that coderef to return a list of
+attribute => value pairs, e.g.
+
+    div {
+        attr {
+            id  => 'one',
+            bip => 'two',
+        };
+    };
+
+=cut
+
+sub _attr { die }
+
+sub attr(&) {
+    my $code = shift;
+
+    ### in attr...
+    _attr($code->());
+}
+
 sub _is_autoload_gen {
     my ($attr_href) = @_;
 
@@ -177,6 +201,19 @@ sub _is_autoload_gen {
     };
 }
 
+sub _attr_gen {
+    my ($attr_href) = @_;
+
+    return sub {
+
+        my %attrs = @_;
+        ### %attrs
+        @{$attr_href}{keys %attrs} = (values %attrs);
+
+        return;
+    };
+}
+
 sub tag($&) {
     my ($tag, $inner_coderef) = @_;
 
@@ -190,6 +227,7 @@ sub tag($&) {
     # it was achieved over there.
     no warnings 'once', 'redefine';
     local *gets::AUTOLOAD = _is_autoload_gen(\%attrs);
+    local *_attr = _attr_gen(\%attrs);
     my $inner = q{};
     my $stdout = capture_stdout { local $IN_TAG = 1; $inner .= $inner_coderef->() || q{} };
 
@@ -207,10 +245,10 @@ sub tag($&) {
 
 use Sub::Exporter -setup => {
 
-    exports => [ our_tags ],
+    exports => [ our_tags, 'attr' ],
     groups  => {
 
-        default    => ':minimal',
+        default     => ':minimal',
 
         minimal     => sub { _generate_group([       minimal_tags ], @_) },
         html5       => sub { _generate_group([         html5_tags ], @_) },
@@ -225,6 +263,7 @@ sub _generate_group {
     my ($tags, $class, $group, $arg) = @_;
 
     return {
+        attr => \&attr,
         map { my $tag = $_; $tag => sub(&) { unshift @_, $tag; goto \&tag } }
         @$tags
     };
