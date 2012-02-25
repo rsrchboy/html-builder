@@ -105,6 +105,18 @@ sub html_tags {
     };
 }
 
+=func form_tags
+
+A list of tags related to forms, that will belong to the C<:form> group.
+
+=cut
+
+sub form_tags { qw{
+
+    form fieldset button input label optgroup option select textarea
+
+}}
+
 =func table_tags
 
 A list of tags related to tables, that will belong to the C<:table> group.
@@ -200,10 +212,12 @@ use Sub::Exporter -setup => {
 
         default    => ':minimal',
 
-        minimal     => sub { _generate_group([     minimal_tags ], @_) },
-        html5       => sub { _generate_group([       html5_tags ], @_) },
-        depreciated => sub { _generate_group([ depreciated_tags ], @_) },
-        table       => sub { _generate_group([       table_tags ], @_) },
+        minimal     => sub { _generate_group([       minimal_tags ], @_) },
+        html5       => sub { _generate_group([         html5_tags ], @_) },
+        depreciated => sub { _generate_group([   depreciated_tags ], @_) },
+        table       => sub { _generate_group([         table_tags ], @_) },
+        form        => sub { _generate_group([          form_tags ], @_) },
+        header      => sub { _generate_group([qw{ header hgroup } ], @_) },
     },
 };
 
@@ -333,6 +347,18 @@ The table tags:
 
 As C<tr> would conflict with a Perl builtin, it is recommended that this group
 be imported with a prefix ('table_' would seem to suggest itself).
+
+=head3 :header
+
+Header tags:
+
+    header hgroup
+
+=head3 :form
+
+Form tags:
+
+    form fieldset button input label optgroup option select textarea
 
 =head1 ACKNOWLEDGMENTS
 
