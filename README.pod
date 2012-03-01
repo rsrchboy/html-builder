@@ -8,7 +8,7 @@ HTML::Builder - A declarative approach to HTML generation
 
 =head1 VERSION
 
-This document describes 0.004 of HTML::Builder - released February 20, 2012 as part of HTML-Builder.
+This document describes 0.005 of HTML::Builder - released March 01, 2012 as part of HTML-Builder.
 
 =head1 SYNOPSIS
 
@@ -55,6 +55,10 @@ The unique, sorted list of all tags returned by html5_tags() and html_tags().
 Returns a HashRef of tags that conflict with Perl builtins: our named exports
 for the tags are the keys; the tags themselves are the values.
 
+=head2 form_tags
+
+A list of tags related to forms, that will belong to the C<:form> group.
+
 =head2 table_tags
 
 A list of tags related to tables, that will belong to the C<:table> group.
@@ -67,6 +71,19 @@ C<:minimal> group.
 =head2 our_tags
 
 The set of all the tags we know of.
+
+=head2 attr(&)
+
+An alternative to using C<gets> (or instances where it won't work, e.g. C<for
+gets 'name'>).  Takes a coderef, expects that coderef to return a list of
+attribute => value pairs, e.g.
+
+    div {
+        attr {
+            id  => 'one',
+            bip => 'two',
+        };
+    };
 
 =head1 USAGE
 
@@ -154,6 +171,18 @@ The table tags:
 
 As C<tr> would conflict with a Perl builtin, it is recommended that this group
 be imported with a prefix ('table_' would seem to suggest itself).
+
+=head3 :header
+
+Header tags:
+
+    header hgroup
+
+=head3 :form
+
+Form tags:
+
+    form fieldset button input label optgroup option select textarea
 
 =head1 ACKNOWLEDGMENTS
 

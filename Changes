@@ -2,6 +2,10 @@ Revision history for HTML-Builder
 
 {{$NEXT}}
 
+0.005     2012-03-01 15:10:08 America/Los_Angeles
+- add attr()
+- add :form, document :header (oops)
+
 0.004     2012-02-20 20:48:01 America/Los_Angeles
 - drop :html, :moose_safe groups
 - add :table group
