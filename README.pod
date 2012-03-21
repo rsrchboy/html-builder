@@ -8,7 +8,7 @@ HTML::Builder - A declarative approach to HTML generation
 
 =head1 VERSION
 
-This document describes 0.005 of HTML::Builder - released March 01, 2012 as part of HTML-Builder.
+This document describes version 0.006 of HTML::Builder - released March 20, 2012 as part of HTML-Builder.
 
 =head1 SYNOPSIS
 
@@ -49,6 +49,12 @@ HTML elements considered to be depreciated.
 =head2 our_tags()
 
 The unique, sorted list of all tags returned by html5_tags() and html_tags().
+
+=head2 html5_minimal_tags()
+
+A minimal subset of HTML5 tags as returned by html5_tags():
+
+    article aside footer header nav
 
 =head2 conflicting_tags
 
