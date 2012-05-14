@@ -133,7 +133,7 @@ A list of tags related to tables, that will belong to the C<:table> group.
 
 =cut
 
-sub table_tags { qw{ tr td th thead tbody tfoot } }
+sub table_tags { qw{ table tr td th thead tbody tfoot } }
 
 =func minimal_tags
 
