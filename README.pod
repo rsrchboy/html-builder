@@ -8,7 +8,7 @@ HTML::Builder - A declarative approach to HTML generation
 
 =head1 VERSION
 
-This document describes version 0.006 of HTML::Builder - released March 20, 2012 as part of HTML-Builder.
+This document describes version 0.007 of HTML::Builder - released May 13, 2012 as part of HTML-Builder.
 
 =head1 SYNOPSIS
 

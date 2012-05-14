@@ -2,6 +2,9 @@ Revision history for HTML-Builder
 
 {{$NEXT}}
 
+0.007     2012-05-13 22:06:06 America/Los_Angeles
+- add the table tag to :table *sigh*
+
 0.006     2012-03-20 20:47:19 America/Los_Angeles
 - add :html5_minimal group
 
