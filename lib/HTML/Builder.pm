@@ -301,6 +301,10 @@ sub _generate_group {
 
 __END__
 
+=for Pod::Coverage depreciated_tags
+
+=for :stopwords Wikipedia
+
 =head1 SYNOPSIS
 
     use HTML::Builder ':minimal';
