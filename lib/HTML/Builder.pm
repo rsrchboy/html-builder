@@ -45,9 +45,9 @@ The list of tags we think are HTML5.
 
 The list of tags we think are HTML ( < HTML5, that is).
 
-=func depreciated_tags()
+=func deprecated_tags()
 
-HTML elements considered to be depreciated.
+HTML elements considered to be deprecated.
 
 =func our_tags()
 
@@ -76,7 +76,8 @@ A minimal subset of HTML5 tags as returned by html5_tags():
 sub html5_minimal_tags { q{ article aside footer header nav } }
 
 # excl: s
-sub depreciated_tags { qw{ applet basefont center dir font menu strike u xmp } }
+sub deprecated_tags { qw{ applet basefont center dir font menu strike u xmp } }
+sub depreciated_tags { deprecated_tags() }
 
 =func conflicting_tags
 
@@ -158,7 +159,7 @@ sub our_tags {
     my @tags = (
         html5_tags(),
         html_tags(),
-        depreciated_tags(),
+        deprecated_tags(),
         (keys %{ conflicting_tags() }),
     );
     return uniq sort @tags;
@@ -263,7 +264,8 @@ use Sub::Exporter -setup => {
         minimal       => sub { _generate_group([       minimal_tags ], @_) },
         html5         => sub { _generate_group([         html5_tags ], @_) },
         html5_minimal => sub { _generate_group([ html5_minimal_tags ], @_) },
-        depreciated   => sub { _generate_group([   depreciated_tags ], @_) },
+        deprecated    => sub { _generate_group([    deprecated_tags ], @_) },
+        depreciated   => sub { _generate_group([    deprecated_tags ], @_) },
         table         => sub { _generate_group([         table_tags ], @_) },
         form          => sub { _generate_group([          form_tags ], @_) },
         header        => sub { _generate_group([qw{ header hgroup } ], @_) },
